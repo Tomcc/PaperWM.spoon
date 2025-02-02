@@ -129,7 +129,7 @@ PaperWM.swipe_fingers = 0
 PaperWM.swipe_gain = 1
 
 -- minimum pixels visible on each side of anchor window
-PaperWM.anchor_padding = 0 
+PaperWM.edge_padding = 0 
 
 -- logger
 PaperWM.logger = hs.logger.new(PaperWM.name)
@@ -580,16 +580,21 @@ function PaperWM:tileSpace(space)
     -- Replace anchor frame positioning code
     local anchor_frame = anchor_window:frame()
     
-    if anchor_frame.w > canvas.w - (2 * self.anchor_padding) then
-        -- Window too wide - place as far left as possible while maintaining right padding
-        anchor_frame.x = canvas.x2 - anchor_frame.w - self.anchor_padding
-    else
-        -- Center window while ensuring padding on both sides
-        anchor_frame.x = math.max(canvas.x + self.anchor_padding, 
-                                math.min(anchor_frame.x, 
-                                    canvas.x2 - anchor_frame.w - self.anchor_padding))
+    local padding = self.edge_padding
+
+    if anchor_frame.w > canvas.w - (2 * self.edge_padding) then
+        -- reduce the padding to center the window
+        padding = (canvas.w - anchor_frame.w) // 2
     end
+
+    -- Center window while ensuring padding on both sides
+    local max = canvas.x2 - anchor_frame.w - self.edge_padding
+    local min = canvas.x + self.edge_padding
+    local x = anchor_frame.x
+
+    anchor_frame.x = math.max(min, math.min(max, x))
     anchor_frame.h = math.min(anchor_frame.h, canvas.h)
+
     -- adjust anchor window column
     local column = getColumn(space, anchor_index.col)
     if not column then
